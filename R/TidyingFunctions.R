@@ -53,10 +53,13 @@ tidysims <- function(sims){
     tidyr::unnest(sim) %>%
     tidyr::pivot_wider(names_from = "outType",values_from = "output")
   sims %<>%
+    # get the pop-class object out of "records"
     dplyr::mutate(simulatedpop=map(records,~.$F1),
                   records=map(records,~.[-1]))
   sims %<>%
-    dplyr::mutate(records=map(records,tidyrecords))
+    # Get the checks pop-class from "bsp" and add to "simulatedpop"
+    dplyr::mutate(simulatedpop=map2(simulatedpop,bsp,~c(.y$checks,.x)),
+                  records=map(records,tidyrecords))
   return(sims)
 }
 
