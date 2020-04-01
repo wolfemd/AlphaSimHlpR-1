@@ -25,6 +25,7 @@ removeOldestCyc <- function(records, bsp){
   for (i in 1:length(records[[2]])) allID <- c(allID, records[[2]][[i]]$id)
   for (i in 1 + 2:bsp$nStages) allID <- c(allID, records[[i]][[1]]$id)
   allID <- unique(allID)
+  if (!is.null(bsp$checks)) allID <- setdiff(allID, bsp$checks@id)
   allID <- allID[order(as.integer(allID))]
   records[[1]] <- records[[1]][allID]
   return(records)
