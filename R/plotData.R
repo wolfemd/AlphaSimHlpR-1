@@ -10,10 +10,10 @@
 #' exptSummary <- plotRecords(records)
 #' 
 #' @export
-plotRecords <- function(records){
+plotRecords <- function(replicRecords){
   nCycKept <- bsp$nCyclesToKeepRecords
   nCyc <- bsp$nCyclesToRun
-  records <- lapply(records, mean_records)
+  records <- lapply(replicRecords, mean_records)
   nS2f <- floor(bsp$nStages/2)
   nS2c <- ceiling(bsp$nStages/2)
   stageOrd <- c(2* nS2f:1, 1:nS2c *2-1)

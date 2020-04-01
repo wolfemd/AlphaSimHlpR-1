@@ -29,15 +29,15 @@ popImprov1Cyc <- function(records, bsp, SP){
     }
   }
   # Select parents among all individuals
-  candidates <- records[[1]]@id
-  crit <- bsp$selCritPopImprov(trainRec, candidates, SP)
+  candidates <- records$F1@id
+  crit <- bsp$selCritPopImprov(trainRec, candidates, bsp, SP)
   if (bsp$useOptContrib){
     progeny <- optContrib(records, bsp, SP, crit)
   } else{
-    parents <- records[[1]][candidates[order(crit, decreasing=T)[1:bsp$nParents]]]
+    parents <- records$F1[candidates[order(crit, decreasing=T)[1:bsp$nParents]]]
     progeny <- randCross(parents, nCrosses=bsp$nCrosses, nProgeny=bsp$nProgeny, ignoreGender=T, simParam=SP)
   }
-  records[[1]] <- c(records[[1]], progeny)
+  records$F1 <- c(records$F1, progeny)
   return(records)
 }
 
@@ -74,11 +74,11 @@ popImprov2Cyc <- function(records, bsp, SP){
         trainRec[[stage]] <- trainRec[[stage]][-length(trainRec[[stage]])]
       }
     }
-    candidates <- records[[1]]@id
-    crit <- bsp$selCritPopImprov(trainRec, candidates, SP)
-    parents <- records[[1]][candidates[order(crit, decreasing=T)[1:bsp$nParents]]]
+    candidates <- records$F1@id
+    crit <- bsp$selCritPopImprov(trainRec, candidates, bsp, SP)
+    parents <- records$F1[candidates[order(crit, decreasing=T)[1:bsp$nParents]]]
     progeny <- randCross(parents, nCrosses=bsp$nCrosses, nProgeny=bsp$nProgeny, ignoreGender=T, simParam=SP)
-    records[[1]] <- c(records[[1]], progeny)
+    records$F1 <- c(records$F1, progeny)
     useCurrentPhenoTrain <- TRUE
   }
   return(records)
@@ -95,13 +95,13 @@ popImprov2Cyc <- function(records, bsp, SP){
 #' @return Pop class object with the progeny from optimum contribution crosses
 #' @details Calculate a grm of individuals with high enough crit, then maximize crit subject to a target increase of relatedness consistent with bsp$targetEffPopSize
 #' @examples 
-#' crit <- bv(records[[1]]); names(crit) <- records[[1]]@id
+#' crit <- bv(records$F1); names(crit) <- records$F1@id
 #' progeny <- optContrib(records, bsp, SP, crit)
 #' @export
 optContrib <- function(records, bsp, SP, crit){
   require(optiSel)
   candidates <- names(crit)[order(crit, decreasing=T)[1:bsp$nCandOptCont]]
-  grm <- sommer::A.mat(pullSnpGeno(records[[1]][candidates], simParam=SP) - 1)
+  grm <- sommer::A.mat(pullSnpGeno(records$F1[candidates], simParam=SP) - 1)
   grm <- grm[candidates, candidates] # Put it in the right order
   phen <- data.frame(Indiv=candidates, crit=crit[candidates])
   invisible(capture.output(cand <- optiSel::candes(phen, grm=grm, quiet=T)))

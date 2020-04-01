@@ -31,5 +31,8 @@ runBreedingScheme <- function(replication=NULL, nCycles=2, initializeFunc, produ
     records <- populationImprovement(records, bsp, SP)
   }
   cat("\n")
+  
+  # Finalize the stageOutputs
+  records <- lastCycStgOut(records, bsp, SP)
   return(list(records=records, bsp=bsp, SP=SP))
 }

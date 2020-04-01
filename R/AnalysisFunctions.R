@@ -12,7 +12,7 @@
 #' @export
 mean_records <- function(records){
   chkID <- records$bsp$checks@id
-  return(sapply(records$records[-1], function(popList) sapply(popList, function(popMat) return(mean(popMat$genoVal[!(popMat$id %in% chkID)])))))
+  return(sapply(records$records[1 + 1:records$bsp$nStages], function(popList) sapply(popList, function(popMat) return(mean(popMat$genoVal[!(popMat$id %in% chkID)])))))
 }
 
 #' elementWise function
@@ -38,16 +38,17 @@ elementWise <- function(arrayList, fnc=mean){
 #' function to make a data.frame to be used as a source of data to analyze the phenotypic \code{records}
 #'
 #' @param records The breeding program \code{records} object. See \code{fillPipeline} for details
+#' @param bsp The breeding scheme parameter list
 #' @return A data.frame of phenotypic records with four columns: 1. The id of individuals; 2. The trial type of the phenotype record; 3. The year the observation was recorded; 4. The phenotypic value
 #' @details \code{records} is a list of lists of populations and is primarily useful for maintaining the phenotypic observations across years and stages. For analysis, you need just the phenotypes in a matrix with relevant independent values
 #' 
 #' @examples
-#' phenoDF <- framePhenoRec(records)
+#' phenoDF <- framePhenoRec(records, bsp)
 #' 
 #' @export
-framePhenoRec <- function(records){
+framePhenoRec <- function(records, bsp){
   allPheno <- tibble()
-  for (stage in 2:length(records)){
+  for (stage in 1 + 1:bsp$nStages){
     for (year in 1:length(records[[stage]])){
       thisPheno <- records[[stage]][[year]] %>% dplyr::mutate(year=year)
       allPheno <- bind_rows(allPheno, thisPheno)
@@ -85,17 +86,20 @@ phenoRecFromPop <- function(pop, bsp, stage, checks=FALSE){
 #' function to make a genomic relationship matrix to be used to analyze the phenotypic \code{records}
 #'
 #' @param records The breeding program \code{records} object. See \code{fillPipeline} for details
+#' @param bsp The breeding scheme parameter list
 #' @param SP The AlphaSimR SimParam object. Needed to pull the SNP genotypes
 #' @return A genomic relationship matrix
 #' @details \code{records} maintains the phenotypic and genotypic records across years and stages. For GEBV analysis, you need the GRM of these individuals. \code{makeGRM} assumes the first phenotyping stage (records[[2]]) has all individuals that have been phenotyped. The GRM also includes the unphenotyped new F1 individuals in records[[1]]
 #' 
 #' @examples
-#' grm <- makeGRM(records, SP)
+#' grm <- makeGRM(records, bsp, SP)
 #' 
 #' @export
-makeGRM <- function(records, SP){
+makeGRM <- function(records, bsp, SP){
   require(sommer)
-  return(A.mat(pullSnpGeno(records[[1]], simParam=SP) - 1))
+  allPop <- records[[1]]
+  if (!is.null(bsp$checks)) allPop <- c(allPop, bsp$checks)
+  return(A.mat(pullSnpGeno(allPop, simParam=SP) - 1))
 }
 
 #' iidPhenoEval function
@@ -107,7 +111,7 @@ makeGRM <- function(records, SP){
 #' @details Given all the phenotypic records calculate the best prediction of the genotypic value for each individual using all its records
 #' 
 #' @examples
-#' phenoDF <- framePhenoRec(records)
+#' phenoDF <- framePhenoRec(records, bsp)
 #' iidBLUPs <- iidPhenoEval(phenoDF)
 #' 
 #' @export
@@ -132,8 +136,8 @@ iidPhenoEval <- function(phenoDF){
 #' @details Given all the phenotypic records calculate the GEBV for each individual using all its records
 #' 
 #' @examples
-#' phenoDF <- framePhenoRec(records)
-#' grm <- makeGRM(records)
+#' phenoDF <- framePhenoRec(records, bsp)
+#' grm <- makeGRM(records, bsp, SP)
 #' grmBLUPs <- grmPhenoEval(phenoDF, grm)
 #' 
 #' @export
@@ -157,6 +161,7 @@ grmPhenoEval <- function(phenoDF, grm){
 #'
 #' @param records The breeding program \code{records} object. See \code{fillPipeline} for details
 #' @param candidates Character vector of ids of the candidates to be parents
+#' @param bsp The breeding scheme parameter list
 #' @param SP The AlphaSimR SimParam object (not used, here for uniformity)
 #' @return An IID BLUP of the trait of the candidates
 #' @details Accesses all individuals in \code{records} to pick the highest among candidates. If candidates do not have records, a random sample is returned
@@ -164,11 +169,11 @@ grmPhenoEval <- function(phenoDF, grm){
 #' @examples
 #' allPop <- mergePops(records[[2]])
 #' candidates <- allPop@id
-#' parents <- allPop[selectParIID(records, candidates, bsp)]
+#' parents <- allPop[selCritIID(records, candidates, bsp, SP)]
 #' 
 #' @export
-selCritIID <- function(records, candidates, SP){
-  phenoDF <- framePhenoRec(records)
+selCritIID <- function(records, candidates, bsp, SP){
+  phenoDF <- framePhenoRec(records, bsp)
   # Candidates don't have phenotypes so return random vector
   if (!any(candidates %in% phenoDF$id)){ 
     crit <- runif(length(candidates))
@@ -186,21 +191,22 @@ selCritIID <- function(records, candidates, SP){
 #'
 #' @param records The breeding program \code{records} object. See \code{fillPipeline} for details
 #' @param candidates Character vector of ids of the candidates to be parents
+#' @param bsp The breeding scheme parameter list
 #' @param SP The AlphaSimR SimParam object (needed to pull SNPs)
 #' @return Character vector of the ids of the selected individuals
 #' @details Accesses all individuals in \code{records} to pick the highest ones
 #' @examples 
 #' candidates <- records[[1]][[1]]@id
-#' parents <- records[[1]][[1]][selectParGRM(records, candidates, bsp, SP)]
+#' parents <- records[[1]][[1]][selCritGRM(records, candidates, bsp, SP)]
 #' 
 #' @export
-selCritGRM <- function(records, candidates, SP){
-  phenoDF <- framePhenoRec(records)
+selCritGRM <- function(records, candidates, bsp, SP){
+  phenoDF <- framePhenoRec(records, bsp)
   if (!any(candidates %in% phenoDF$id)){ 
     crit <- runif(length(candidates))
     names(crit) <- candidates
   } else{
-    grm <- makeGRM(records, SP)
+    grm <- makeGRM(records, bsp, SP)
     # Remove individuals with phenotypes but who no longer have geno records
     # I am not sure this can happen but it is a safeguard
     phenoDF <- phenoDF[phenoDF$id %in% rownames(grm),]

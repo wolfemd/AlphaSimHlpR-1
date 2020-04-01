@@ -25,6 +25,6 @@ function uses optiSel to identify number of progeny, allocate mates to minimize 
 Calculate a grm of individuals with high enough crit, then maximize crit subject to a target increase of relatedness consistent with bsp$targetEffPopSize
 }
 \examples{
-crit <- bv(records[[1]]); names(crit) <- records[[1]]@id
+crit <- bv(records$F1); names(crit) <- records$F1@id
 progeny <- optContrib(records, bsp, SP, crit)
 }

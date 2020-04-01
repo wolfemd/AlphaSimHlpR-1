@@ -4,10 +4,12 @@
 \alias{framePhenoRec}
 \title{framePhenoRec function}
 \usage{
-framePhenoRec(records)
+framePhenoRec(records, bsp)
 }
 \arguments{
 \item{records}{The breeding program \code{records} object. See \code{fillPipeline} for details}
+
+\item{bsp}{The breeding scheme parameter list}
 }
 \value{
 A data.frame of phenotypic records with four columns: 1. The id of individuals; 2. The trial type of the phenotype record; 3. The year the observation was recorded; 4. The phenotypic value
@@ -19,6 +21,6 @@ function to make a data.frame to be used as a source of data to analyze the phen
 \code{records} is a list of lists of populations and is primarily useful for maintaining the phenotypic observations across years and stages. For analysis, you need just the phenotypes in a matrix with relevant independent values
 }
 \examples{
-phenoDF <- framePhenoRec(records)
+phenoDF <- framePhenoRec(records, bsp)
 
 }

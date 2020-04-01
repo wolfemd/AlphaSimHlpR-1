@@ -21,8 +21,8 @@ function to take a data.frame coming from framePhenoRec and GRM and analyze them
 Given all the phenotypic records calculate the GEBV for each individual using all its records
 }
 \examples{
-phenoDF <- framePhenoRec(records)
-grm <- makeGRM(records)
+phenoDF <- framePhenoRec(records, bsp)
+grm <- makeGRM(records, bsp, SP)
 grmBLUPs <- grmPhenoEval(phenoDF, grm)
 
 }

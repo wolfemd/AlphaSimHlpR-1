@@ -23,11 +23,11 @@ This is a structure for a records object that will be used to simulate breeding 
 \examples{
 bsp <- specifyPipeline()
 bsp <- specifyPopulation(bsp)
-founderPop <- runMacs(nInd=bsp$nFounders, nChr=bsp$nChr, segSites=bsp$segSites)
-SP <- SimParam$new(founderPop)
+founderHap <- runMacs(nInd=bsp$nFounders, nChr=bsp$nChr, segSites=bsp$segSites)
+SP <- SimParam$new(founderHap)
 SP$addTraitA(nQtlPerChr=bsp$nQTL, var=bsp$genVar)
 SP$addSnpChip(bsp$nSNP)
-founders <- newPop(founderPop, simParam=SP)
+founders <- newPop(founderHap, simParam=SP)
 bsp <- c(bsp, checks=list(NULL))
 records <- fillPipeline(founders, bsp, SP)
 

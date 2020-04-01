@@ -4,12 +4,14 @@
 \alias{selCritGRM}
 \title{selCritGRM function}
 \usage{
-selCritGRM(records, candidates, SP)
+selCritGRM(records, candidates, bsp, SP)
 }
 \arguments{
 \item{records}{The breeding program \code{records} object. See \code{fillPipeline} for details}
 
 \item{candidates}{Character vector of ids of the candidates to be parents}
+
+\item{bsp}{The breeding scheme parameter list}
 
 \item{SP}{The AlphaSimR SimParam object (needed to pull SNPs)}
 }
@@ -24,6 +26,6 @@ Accesses all individuals in \code{records} to pick the highest ones
 }
 \examples{
 candidates <- records[[1]][[1]]@id
-parents <- records[[1]][[1]][selectParGRM(records, candidates, bsp, SP)]
+parents <- records[[1]][[1]][selCritGRM(records, candidates, bsp, SP)]
 
 }

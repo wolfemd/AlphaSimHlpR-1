@@ -4,10 +4,12 @@
 \alias{makeGRM}
 \title{makeGRM function}
 \usage{
-makeGRM(records, SP)
+makeGRM(records, bsp, SP)
 }
 \arguments{
 \item{records}{The breeding program \code{records} object. See \code{fillPipeline} for details}
+
+\item{bsp}{The breeding scheme parameter list}
 
 \item{SP}{The AlphaSimR SimParam object. Needed to pull the SNP genotypes}
 }
@@ -21,6 +23,6 @@ function to make a genomic relationship matrix to be used to analyze the phenoty
 \code{records} maintains the phenotypic and genotypic records across years and stages. For GEBV analysis, you need the GRM of these individuals. \code{makeGRM} assumes the first phenotyping stage (records[[2]]) has all individuals that have been phenotyped. The GRM also includes the unphenotyped new F1 individuals in records[[1]]
 }
 \examples{
-grm <- makeGRM(records, SP)
+grm <- makeGRM(records, bsp, SP)
 
 }

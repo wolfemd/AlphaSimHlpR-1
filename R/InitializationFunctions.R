@@ -18,16 +18,16 @@
 #' @export
 initFuncSimp <- function(bsp){
   # Create haplotypes for founder population of outbred individuals
-  founderPop <- runMacs2(nInd=bsp$nFounders, nChr=bsp$nChr, segSites=bsp$segSites, Ne=bsp$effPopSize)
+  founderHap <- runMacs2(nInd=bsp$nEntries[1], nChr=bsp$nChr, segSites=bsp$segSites, Ne=bsp$effPopSize)
   
   # New global simulation parameters from founder haplotypes
-  SP <- SimParam$new(founderPop)
+  SP <- SimParam$new(founderHap)
   # Additive and dominance trait architecture
   SP$addTraitA(nQtlPerChr=bsp$nQTL, var=bsp$genVar)
   # Observed SNPs per chromosome
   SP$addSnpChip(bsp$nSNP)
   
-  founders <- newPop(founderPop, simParam=SP)
+  founders <- newPop(founderHap, simParam=SP)
 
   records <- fillPipeline(founders, bsp, SP)
   
@@ -55,16 +55,16 @@ initFuncSimp <- function(bsp){
 initFuncADChk <- function(bsp){
   # Create haplotypes for founder population of outbred individuals
   # Note: default effective population size for runMacs is 100
-  founderPop <- runMacs2(nInd=bsp$nFounders, nChr=bsp$nChr, segSites=bsp$segSites, bsp$effPopSize)
+  founderHap <- runMacs2(nInd=bsp$nEntries[1], nChr=bsp$nChr, segSites=bsp$segSites, bsp$effPopSize)
   
   # New global simulation parameters from founder haplotypes
-  SP <- SimParam$new(founderPop)
+  SP <- SimParam$new(founderHap)
   # Additive and dominance trait architecture
   SP$addTraitAD(nQtlPerChr=bsp$nQTL, var=bsp$genVar, meanDD=bsp$meanDD, varDD=bsp$varDD, useVarA=FALSE)
   # Observed SNPs per chromosome
   SP$addSnpChip(bsp$nSNP)
   
-  founders <- newPop(founderPop, simParam=SP)
+  founders <- newPop(founderHap, simParam=SP)
   if (any(bsp$nChks > 0)){
     bsp$checks <- selectInd(founders, nInd=max(bsp$nChks), use="rand", simParam=SP)
   } else bsp$checks <- NULL
@@ -87,32 +87,31 @@ initFuncADChk <- function(bsp){
 #' @examples
 #' bsp <- specifyPipeline()
 #' bsp <- specifyPopulation(bsp)
-#' founderPop <- runMacs(nInd=bsp$nFounders, nChr=bsp$nChr, segSites=bsp$segSites)
-#' SP <- SimParam$new(founderPop)
+#' founderHap <- runMacs(nInd=bsp$nFounders, nChr=bsp$nChr, segSites=bsp$segSites)
+#' SP <- SimParam$new(founderHap)
 #' SP$addTraitA(nQtlPerChr=bsp$nQTL, var=bsp$genVar)
 #' SP$addSnpChip(bsp$nSNP)
-#' founders <- newPop(founderPop, simParam=SP)
+#' founders <- newPop(founderHap, simParam=SP)
 #' bsp <- c(bsp, checks=list(NULL))
 #' records <- fillPipeline(founders, bsp, SP)
 #' 
 #' @export
 fillPipeline <- function(founders, bsp=NULL, SP){
-  records <- list(randCross(founders, nCrosses=bsp$nCrosses, nProgeny=bsp$nProgeny, ignoreGender=T, simParam=SP))
-  for (year in 1:bsp$nStages){
-    for (stage in 1:year){
+  nF1 <- bsp$nCrosses * bsp$nProgeny
+  records <- list(founders)
+  for (year in 1 + -(bsp$nStages:1)){
+    toAdd <- list()
+    for (stage in 1:(year+bsp$nStages)){
       if (stage==1){ # Stage 1: F1 progeny population: random selection use pop
-        nGenoRec <- nInd(records[[1]])
-        nF1 <- bsp$nCrosses * bsp$nProgeny # Sample from the most-recent F1s
-        indToAdv <- nGenoRec - nF1 + sort(sample(nF1, bsp$nEntries[1]))
-        entries <- records[[1]][indToAdv]
-        # Don't want to bother with phenotypes but want mild selection: use gv
-        parents <- selectInd(entries, nInd=nInd(entries)/1.5, use="gv", simParam=SP)
-        toAdd <- list(randCross(parents, nCrosses=bsp$nCrosses, nProgeny=bsp$nProgeny, ignoreGender=T, simParam=SP))
-      } else{ # Stage > 1: sort the matrix and make population of best
-        sourcePop <- last(records[[stage]])
-        idBest <- sourcePop$id[order(sourcePop$pheno[1:bsp$nEntries[stage-1]], decreasing=T)[1:bsp$nEntries[stage]]]
-        entries <- records[[1]][idBest]
+        # Select from the most recent F1s
+        indToAdv <- nInd(records[[1]]) - nF1 + sort(sample(nF1, bsp$nEntries[stage]))
+      } else{
+        # Don't allow checks to be advanced: use 1:bsp$nEntries[stage-1]
+        sourcePop <- last(records[[stage]])[1:bsp$nEntries[stage-1],]
+        indToAdv <- order(sourcePop$pheno, decreasing=T)[1:bsp$nEntries[stage]]
+        indToAdv <- sourcePop$id[sort(indToAdv)]
       }
+      entries <- records[[1]][indToAdv]
       varE <- (bsp$gxeVar + bsp$errVars[stage] / bsp$nReps[stage]) / bsp$nLocs[stage]
       # reps=1 because varE is computed above
       entries <- setPheno(entries, varE=varE, reps=1, simParam=SP)
@@ -125,6 +124,13 @@ fillPipeline <- function(founders, bsp=NULL, SP){
       }
       toAdd <- c(toAdd, list(phenoRec))
     }#END stages
+    
+    # Make the next F1s with mild selection using gv
+    lastGen <- nInd(records[[1]]) - nF1 + 1:nF1
+    parents <- selectInd(records[[1]][lastGen], nInd=nF1/1.5, use="gv", simParam=SP)
+    toAdd <- c(list(randCross(parents, nCrosses=bsp$nCrosses, nProgeny=bsp$nProgeny, ignoreGender=T, simParam=SP)), toAdd)
+
+    # Actually fill the records
     records[[1]] <- c(records[[1]], toAdd[[1]])
     for (i in 2:length(toAdd)){
       if (i > length(records)){
@@ -135,5 +141,6 @@ fillPipeline <- function(founders, bsp=NULL, SP){
     }
   }#END years
   names(records) <- c("F1", bsp$stageNames)
-  return(records)
+  # stageOutputs relies on knowing the year from the previous year
+  return(c(records, stageOutputs=list(tibble(year=0))))
 }

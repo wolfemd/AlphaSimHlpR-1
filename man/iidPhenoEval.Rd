@@ -19,7 +19,7 @@ function to take a data.frame coming from framePhenoRec and analyze it with indi
 Given all the phenotypic records calculate the best prediction of the genotypic value for each individual using all its records
 }
 \examples{
-phenoDF <- framePhenoRec(records)
+phenoDF <- framePhenoRec(records, bsp)
 iidBLUPs <- iidPhenoEval(phenoDF)
 
 }

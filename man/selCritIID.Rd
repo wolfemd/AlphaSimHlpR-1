@@ -4,12 +4,14 @@
 \alias{selCritIID}
 \title{selCritIID function}
 \usage{
-selCritIID(records, candidates, SP)
+selCritIID(records, candidates, bsp, SP)
 }
 \arguments{
 \item{records}{The breeding program \code{records} object. See \code{fillPipeline} for details}
 
 \item{candidates}{Character vector of ids of the candidates to be parents}
+
+\item{bsp}{The breeding scheme parameter list}
 
 \item{SP}{The AlphaSimR SimParam object (not used, here for uniformity)}
 }
@@ -25,6 +27,6 @@ Accesses all individuals in \code{records} to pick the highest among candidates.
 \examples{
 allPop <- mergePops(records[[2]])
 candidates <- allPop@id
-parents <- allPop[selectParIID(records, candidates, bsp)]
+parents <- allPop[selCritIID(records, candidates, bsp, SP)]
 
 }

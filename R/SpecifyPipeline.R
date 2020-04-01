@@ -38,7 +38,7 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
     useCurrentPhenoTrain <- FALSE
     nCyclesToKeepRecords <- 5 # How many cycles to keep records
     # Function to advance individuals from one stage to the next
-    selCritPipeAdv <- iidPhenoEval
+    selCritPipeAdv <- selCritIID
     selCritPopImprov <- selCritIID
     bspNew <- mget(setdiff(ls(), "bspNew"))
     #END no control file
