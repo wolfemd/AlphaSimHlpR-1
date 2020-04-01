@@ -16,10 +16,10 @@ a tidy tibble with one row per simulation, cols: records (tibble of all phenotyp
 function to create a tidy tibble from a list of runBreedingScheme simulations
 }
 \examples{
-sims<-map(1:2,~runBreedingScheme(replication = .,nCycles = 7,
+sims <- map(1:2,~runBreedingScheme(replication = .,nCycles = 7,
                                 initializeFunc = initFuncADChk,
                                 productPipeline = prodPipeFncChk,
                                 populationImprovement = popImprov1Cyc,
                                 bsp = bsp))
-sims<-tidysims(sims)
+sims <- tidysims(sims)
 }

@@ -3,11 +3,12 @@
 #' function to remove records of the oldest cycles still in \code{records}. Useful to avoid accumulating too much data which slows simulations down and makes them bulky
 #'
 #' @param records The breeding program \code{records} object. See \code{fillPipeline} for details
+#' @param bsp The breeding scheme parameter list
 #' @return A \code{records} object with the first population of each list removed.
 #' @details \code{records} is a list of lists. This function deletes the first object of each list, excluding the F1 list.
 #'
 #' @examples
-#' records <- removeOldestCyc(records)
+#' records <- removeOldestCyc(records, bsp)
 #'
 #' @export
 removeOldestCyc <- function(records, bsp){
@@ -24,11 +25,11 @@ removeOldestCyc <- function(records, bsp){
   for (i in 1:length(records[[2]])) allID <- c(allID, records[[2]][[i]]$id)
   for (i in 1 + 2:bsp$nStages) allID <- c(allID, records[[i]][[1]]$id)
   allID <- unique(allID)
+  if (!is.null(bsp$checks)) allID <- setdiff(allID, bsp$checks@id)
   allID <- allID[order(as.integer(allID))]
   records[[1]] <- records[[1]][allID]
   return(records)
 }
-
 
 #' tidysims function
 #'
@@ -40,23 +41,26 @@ removeOldestCyc <- function(records, bsp){
 #' @export
 #'
 #' @examples
-#' sims<-map(1:2,~runBreedingScheme(replication = .,nCycles = 7,
+#' sims <- map(1:2,~runBreedingScheme(replication = .,nCycles = 7,
 #'                                 initializeFunc = initFuncADChk,
 #'                                 productPipeline = prodPipeFncChk,
 #'                                 populationImprovement = popImprov1Cyc,
 #'                                 bsp = bsp))
-#' sims<-tidysims(sims)
-tidysims<-function(sims){
+#' sims <- tidysims(sims)
+tidysims <- function(sims){
   require(magrittr); require(purrr)
-  sims<-tibble(SimRep=1:length(sims),sim=sims) %>%
+  sims <- tibble(SimRep=1:length(sims),sim=sims) %>%
     dplyr::mutate(sim=map(sim,~tibble(outType=names(.),output=.))) %>%
     tidyr::unnest(sim) %>%
     tidyr::pivot_wider(names_from = "outType",values_from = "output")
   sims %<>%
+    # get the pop-class object out of "records"
     dplyr::mutate(simulatedpop=map(records,~.$F1),
                   records=map(records,~.[-1]))
   sims %<>%
-    dplyr::mutate(records=map(records,tidyrecords))
+    # Get the checks pop-class from "bsp" and add to "simulatedpop"
+    dplyr::mutate(simulatedpop=map2(simulatedpop,bsp,~c(.y$checks,.x)),
+                  records=map(records,tidyrecords))
   return(sims)
 }
 
@@ -72,9 +76,10 @@ tidysims<-function(sims){
 #' @examples
 #' records <- fillPipeline(founders, bsp, SP)
 #' records <- tidyrecords(records)
-tidyrecords<-function(records){
-  tidyrecs<-tibble(stageName=names(records),recs=records) %>%
-    unnest_longer(recs,indices_to = "year") %>%
+tidyrecords <- function(records){
+  tidyrecs <- tibble(stageName=names(records), recs=records) %>%
+    unnest_longer(recs, indices_to = "year") %>%
     unnest(recs)
+
   return(tidyrecs)
 }

@@ -16,7 +16,7 @@ nProgeny
 
 # Optimum contributions parameters
 useOptContrib
-TRUE
+FALSE
 nCandOptCont
 200
 targetEffPopSize
@@ -53,11 +53,11 @@ TRUE
 
 # How many cycles to keep records. Must be > nStages
 nCyclesToKeepRecords
-5
+3
 
 # Name of function to advance individuals from one stage to the next
 selCritPipeAdv
-selCritGRM
+selCritIID
 
 # Name of function to select individuals to be parents for the next cycle
 selCritPopImprov

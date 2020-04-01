@@ -110,7 +110,7 @@ fillPipeline <- function(founders, bsp=NULL, SP){
         toAdd <- list(randCross(parents, nCrosses=bsp$nCrosses, nProgeny=bsp$nProgeny, ignoreGender=T, simParam=SP))
       } else{ # Stage > 1: sort the matrix and make population of best
         sourcePop <- last(records[[stage]])
-        idBest <- sourcePop$id[order(sourcePop$pheno, decreasing=T)[1:bsp$nEntries[stage]]]
+        idBest <- sourcePop$id[order(sourcePop$pheno[1:bsp$nEntries[stage-1]], decreasing=T)[1:bsp$nEntries[stage]]]
         entries <- records[[1]][idBest]
       }
       varE <- (bsp$gxeVar + bsp$errVars[stage] / bsp$nReps[stage]) / bsp$nLocs[stage]

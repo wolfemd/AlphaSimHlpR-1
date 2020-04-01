@@ -151,6 +151,6 @@ optContrib <- function(records, bsp, SP, crit){
       }
     }
   }
-  progeny <- makeCross(records[[1]], crossPlan, SP)
+  progeny <- makeCross(records[[1]], crossPlan, simParam=SP)
   return(progeny)
 }
