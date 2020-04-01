@@ -45,14 +45,14 @@ Ideally this is useful for programmatically varying breeding schemes.
 All arguments are exactly as specified in the control files. Main exception is schemeDF, which is just a tibble() or data.frame version of the set of bsp arguments which are vectors (giving values for each breeding stage). Columns must have names exactly as in the corresponding arguments in control file: stageNames, nReps, nLocs, nChks, nEntries, entryToChkRatio, errVars
 }
 \examples{
-schemeDF<-tibble(stageNames=c("SDN", "CET", "PYT"),
+schemeDF <- tibble(stageNames=c("SDN", "CET", "PYT"),
                  nReps=c(1, 1, 2),
                  nLocs=c(1, 1, 2),
                  nChks=c(1, 1, 2),
                  nEntries=c(100, 50, 20),
                  entryToChkRatio=c(50, 20, 10),
                  errVars=c(150,75,40))
-bsp<-specifyBSP(schemeDF,nParents = 10, nCrosses = 10, nProgeny = 10,
+bsp <- specifyBSP(schemeDF,nParents = 10, nCrosses = 10, nProgeny = 10,
                 useOptContrib = FALSE,
                 useCurrentPhenoTrain = TRUE,
                 nCyclesToKeepRecords = 1,
@@ -61,7 +61,7 @@ bsp<-specifyBSP(schemeDF,nParents = 10, nCrosses = 10, nProgeny = 10,
                 nChr = 2,effPopSize = 50, nFounders = 100,
                 segSites = 100, nQTL = 5, nSNP = 10,
                 genVar = 50, gxeVar = 0, meanDD = 0.05, varDD = 0.25)
-test<-runBreedingScheme(replication = 1,nCycles = 1,
+test <- runBreedingScheme(replication = 1,nCycles = 1,
                         initializeFunc = initFuncADChk,
                         productPipeline = prodPipeFncChk,
                         populationImprovement = popImprov1Cyc,

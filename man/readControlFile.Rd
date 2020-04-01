@@ -9,7 +9,7 @@ readControlFile(fileName, parmNames)
 \arguments{
 \item{fileName}{The name of the text file to be read. Must include the path to the file}
 
-\item{bsp}{A string vector with the names of the control parameters that will be searched in the text file}
+\item{parmNames}{A string vector with the names of the control parameters that will be searched in the text file}
 }
 \value{
 A named list of the parameter values read from the control file
