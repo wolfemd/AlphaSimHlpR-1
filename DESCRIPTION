@@ -1,8 +1,8 @@
 Package: AlphaSimHlpR
 Type: Package
 Title: Functions added to AlphaSimR to simplify simulating breeding schemes
-Version: 0.1.2
-Date: 2020-03-16
+Version: 0.1.3
+Date: 2020-04-02
 Author: Jean-Luc Jannink and Moshood Bakare
 Maintainer: <jeanluc.work@gmail.com>
 Description: A complete breeding scheme has a product development pipeline that takes new progeny through testing in different stages, and a population improvement component that uses phenotype and genotype records to determine which individuals should become parents and how they should be mated. This package contains functions that exemplify these components using the AlphaSimR package.

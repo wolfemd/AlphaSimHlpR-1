@@ -98,7 +98,10 @@ phenoRecFromPop <- function(pop, bsp, stage, checks=FALSE){
 makeGRM <- function(records, bsp, SP){
   require(sommer)
   allPop <- records[[1]]
-  if (!is.null(bsp$checks)) allPop <- c(allPop, bsp$checks)
+  if (!is.null(bsp$checks)){
+    putInChks <- setdiff(bsp$checks@id, allPop@id)
+    if (length(putInChks > 0)) allPop <- c(allPop, bsp$checks[putInChks])
+  }
   return(A.mat(pullSnpGeno(allPop, simParam=SP) - 1))
 }
 
