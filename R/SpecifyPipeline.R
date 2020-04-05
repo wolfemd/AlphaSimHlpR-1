@@ -203,12 +203,12 @@ specifyBSP <- function(schemeDF,
   bspNew <- list()
   bspNew[["nStages"]] <- nrow(schemeDF)
   bspNew[["stageNames"]] <- schemeDF$stageNames
-  bspNew[["nReps"]] <- schemeDF$nReps %>% `names <- `(bspNew$stageNames)
-  bspNew[["nLocs"]] <- schemeDF$nLocs %>% `names <- `(bspNew$stageNames)
-  bspNew[["nChks"]] <- schemeDF$nChks %>% `names <- `(bspNew$stageNames)
-  bspNew[["nEntries"]] <- schemeDF$nEntries %>% `names <- `(bspNew$stageNames)
-  bspNew[["entryToChkRatio"]] <- schemeDF$entryToChkRatio %>% `names <- `(bspNew$stageNames)
-  bspNew[["errVars"]] <- schemeDF$errVars %>% `names <- `(bspNew$stageNames)
+  bspNew[["nReps"]] <- schemeDF$nReps %>% `names<-`(bspNew$stageNames)
+  bspNew[["nLocs"]] <- schemeDF$nLocs %>% `names<-`(bspNew$stageNames)
+  bspNew[["nChks"]] <- schemeDF$nChks %>% `names<-`(bspNew$stageNames)
+  bspNew[["nEntries"]] <- schemeDF$nEntries %>% `names<-`(bspNew$stageNames)
+  bspNew[["entryToChkRatio"]] <- schemeDF$entryToChkRatio %>% `names<-`(bspNew$stageNames)
+  bspNew[["errVars"]] <- schemeDF$errVars %>% `names<-`(bspNew$stageNames)
   bspNew[["nParents"]] <- nParents
   bspNew[["nCrosses"]] <- nCrosses
   bspNew[["nProgeny"]] <- nProgeny
@@ -229,7 +229,7 @@ specifyBSP <- function(schemeDF,
   bspNew[["varDD"]] <- varDD
 
   bspNew <- calcDerivedParms(bspNew)
-  return(bspNew) 
+  return(bspNew)
 }
 
 #' calcDerivedParms function
@@ -245,22 +245,22 @@ calcDerivedParms <- function(bsp){
   # Some parms have to be logical
   bsp$useCurrentPhenoTrain <- as.logical(bsp$useCurrentPhenoTrain)
   bsp$useOptContrib <- as.logical(bsp$useOptContrib)
-  
+
   # In case the function is referred by name, replace with actual function
   if ("character" %in% class(bsp$selCritPipeAdv))
     bsp$selCritPipeAdv <- get(bsp$selCritPipeAdv)
   if ("character" %in% class(bsp$selCritPopImprov))
     bsp$selCritPopImprov <- get(bsp$selCritPopImprov)
-  
+
   # Make sure you keep enough cycles
   bsp$nCyclesToKeepRecords <- max(bsp$nStages+1, bsp$nCyclesToKeepRecords)
-  
+
   # Stop and warn user if not enough crosses specified
   if((bsp$nCrosses * bsp$nProgeny) < bsp$nEntries[1]){
     print("Not enough F1s to fill up Stage 1 trial. [nCrosses * nProgeny >= nEntries for Stage 1] is required")
     stop()
   }
-  
+
   # Figure out how many checks to add to each stage
   pairwiseComp <- function(vec1, vec2, fnc){
     return(apply(cbind(vec1, vec2), 1, fnc))
@@ -272,7 +272,7 @@ calcDerivedParms <- function(bsp){
   # Safety if nChks or entryToChkRatio misunderstood
   bsp$nChks <- if_else(bsp$entryToChkRatio == 0, 0, bsp$nChks)
   chkReps <- if_else(is.infinite(chkReps) | is.nan(chkReps) | is.na(chkReps), 0, chkReps)
-  
+
   # Make sure everything has names
   names(bsp$nEntries) <- names(bsp$nChks) <- names(bsp$nReps) <- names(bsp$nLocs) <- names(bsp$errVars) <- names(chkReps) <- bsp$stageNames
   bsp <- c(bsp, list(chkReps=chkReps), list(checks=NULL))

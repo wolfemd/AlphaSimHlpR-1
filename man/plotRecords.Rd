@@ -4,7 +4,7 @@
 \alias{plotRecords}
 \title{plotRecords function}
 \usage{
-plotRecords(records)
+plotRecords(replicRecords)
 }
 \arguments{
 \item{records}{The breeding program \code{records} object. See \code{fillPipeline} for details}
