@@ -53,27 +53,29 @@ tidysims <- function(sims){
     dplyr::mutate(sim=map(sim,~tibble(outType=names(.),output=.))) %>%
     tidyr::unnest(sim) %>%
     tidyr::pivot_wider(names_from = "outType",values_from = "output")
+  # get the pop-class object out of "records"
   sims %<>%
-    # get the pop-class object out of "records"
     dplyr::mutate(simulatedpop=map(records,~.$F1),
                   records=map(records,~.[-1]))
+  # Get the checks pop-class from "bsp" and add to "simulatedpop"
   sims %<>%
-    # Get the checks pop-class from "bsp" and add to "simulatedpop"
-    dplyr::mutate(simulatedpop=map2(simulatedpop,bsp,~c(.y$checks,.x)),
-                  records=map(records,tidyrecords))
+    dplyr::mutate(simulatedpop=map2(simulatedpop,bsp,~c(.y$checks,.x)))
+  # Get the stageOutputs
+  sims %<>%
+    dplyr::mutate(stageOutputs=map(records,~pluck(.,"stageOutputs")),
+                  records=map(records,~keep(.,names(.)!="stageOutputs")))
+  # If present: Get the cycleOutputs
+  if(any(names(sims$records[[1]])=="cycleOutputs")){
+    sims %<>%
+      dplyr::mutate(cycleOutputs=map(records,~pluck(.,"cycleOutputs")),
+                    records=map(records,~keep(.,names(.)!="cycleOutputs")))
+  }
+  sims %<>%
+    dplyr::mutate(records=map(records,tidyrecords))
   return(sims)
 }
 
-#' tidyrecords function
-#'
-#' function to create a tibble with indicator for year and stage from a "records" object produced by AlphaSimHlpR. Possibly redundant to framePhenoRec() function.
-#'
-#' @param records a list-class "records" object produced by AlphaSimHlpR
-#'
-#' @return a tibble with indicator for year and stage
-#' @export
-#'
-#' @examples
+@examples
 #' records <- fillPipeline(founders, bsp, SP)
 #' records <- tidyrecords(records)
 tidyrecords <- function(records){
