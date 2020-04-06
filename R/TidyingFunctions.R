@@ -47,6 +47,7 @@ removeOldestCyc <- function(records, bsp){
 #'                                 populationImprovement = popImprov1Cyc,
 #'                                 bsp = bsp))
 #' sims <- tidysims(sims)
+#'
 tidysims <- function(sims){
   require(magrittr); require(purrr)
   sims <- tibble(SimRep=1:length(sims),sim=sims) %>%
@@ -75,7 +76,16 @@ tidysims <- function(sims){
   return(sims)
 }
 
-@examples
+#' tidyrecords function
+#'
+#' function to create a tibble with indicator for year and stage from a "records" object produced by AlphaSimHlpR. Possibly redundant to framePhenoRec() function.
+#'
+#' @param records a list-class "records" object produced by AlphaSimHlpR
+#'
+#' @return a tibble with indicator for year and stage
+#' @export
+#'
+#' @examples
 #' records <- fillPipeline(founders, bsp, SP)
 #' records <- tidyrecords(records)
 tidyrecords <- function(records){

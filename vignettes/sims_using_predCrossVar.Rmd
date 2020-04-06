@@ -1,0 +1,162 @@
+---
+title: "AlphaSimHlpR functions to breed based on predicted cross usefulness"
+author: 
+- Marnin Wolfe
+date: "2020-April-05"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Usefulness Criterion}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Test install to AlphaSimHlpR
+```{r, eval=F}
+rm(list=ls())
+library(tidyverse); library(magrittr); library(AlphaSimR); library(AlphaSimHlpR); library(predCrossVar)
+schemeDF<-tibble(stageNames=c("CET", "PYT","AYT"),
+                 nReps=c(1, 2, 4),
+                 nLocs=c(1, 2, 4),
+                 nChks=c(2, 2, 2),
+                 nEntries=c(100, 20, 10),
+                 entryToChkRatio=c(10, 5, 5),
+                 errVars=c(100, 50, 25))
+totNprogeny<-schemeDF$nEntries[1]
+nParents<-10; nProgeny<-10; nCrosses<-ceiling(totNprogeny/nProgeny)
+bsp<-specifyBSP(schemeDF,nParents = nParents, nCrosses = nCrosses, nProgeny = nProgeny,
+                useOptContrib = FALSE,
+                useCurrentPhenoTrain = TRUE,
+                nCyclesToKeepRecords = 10,
+                selCritPipeAdv = selCritIID,
+                selCritPopImprov = selCritUCA,
+                nChr = 3,effPopSize = 200, nFounders = 200, 
+                segSites = 200, nQTL = 20, nSNP = 50, 
+                genVar = 50, gxeVar = 0, meanDD = 0.1, varDD = 0.25)
+testsim<-runBreedingSchemeCycOutputs(replication = 1,nCycles = 2,
+                                     initializeFunc = initFuncADChk,
+                                     productPipeline = prodPipeFncChk,
+                                     populationImprovement = popImprovUC,
+                                     bsp = bsp)
+```
+
+# Compare UC to recurrent GS
+
+This will be a vignette for the new functions.
+```{bash, eval=F}
+# activate multithread OpenBLAS for fast compute of SigmaM (genotypic var-covar matrix)
+export OMP_NUM_THREADS=56
+```
+```{r, eval=F}
+# devtools::install_github("wolfemd/predCrossVar", ref = 'master')
+# devtools::install_github("wolfemd/AlphaSimHlpR-1", ref = 'feature')
+```
+This will be a vignette for the new functions.
+
+```{r, eval=F}
+rm(list=ls())
+library(tidyverse); library(magrittr); 
+library(AlphaSimR); 
+library(AlphaSimHlpR); 
+library(predCrossVar)
+schemeDF<-tibble(stageNames=c("CET", "PYT","AYT"),
+                 nReps=c(1, 2, 4),
+                 nLocs=c(1, 2, 4),
+                 nChks=c(2, 2, 2),
+                 nEntries=c(100, 20, 10),
+                 entryToChkRatio=c(10, 5, 5),
+                 errVars=c(100, 50, 25))
+totNprogeny<-schemeDF$nEntries[1]
+nParents<-10; nProgeny<-10; nCrosses<-ceiling(totNprogeny/nProgeny)
+```
+
+Specify **bsp** for a breeding scheme selecting crosses based on predicted usefulness.
+```{r specify UC BSP, eval=F}
+bsp<-specifyBSP(schemeDF,nParents = nParents, nCrosses = nCrosses, nProgeny = nProgeny,
+                useOptContrib = FALSE,
+                useCurrentPhenoTrain = TRUE,
+                nCyclesToKeepRecords = 10,
+                selCritPipeAdv = selCritIID,
+                selCritPopImprov = selCritUCA,
+                nChr = 3,effPopSize = 200, nFounders = 200, 
+                segSites = 200, nQTL = 30, nSNP = 50, 
+                genVar = 50, gxeVar = 0, meanDD = 0.1, varDD = 0.25)
+```
+Run 4 iterations of 10 breeding cycles under this scheme...
+Optionally, running each iteration in parallel on 4 cores.
+```{r, eval=F}
+starttime<-proc.time()[3]
+require(furrr); options(mc.cores=4); plan(multiprocess)
+ucsims<-future_map(1:4,~runBreedingSchemeCycOutputs(replication = .,nCycles = 10,
+                                             initializeFunc = initFuncADChk,
+                                             productPipeline = prodPipeFncChk,
+                                             populationImprovement = popImprovUC,
+                                             bsp = bsp))
+runtime_uc<-proc.time()[3]-starttime; runtime_uc/60
+#  elapsed
+# 12.68262
+saveRDS(ucsims,here::here("output","ucsim_compare2gssims.rds"))
+```
+Next, for comparison, run a "standard" recurrent GS breeding scheme with the same genetic architecture / VDP specifications.
+```{r, eval=F}
+bsp<-specifyBSP(schemeDF,nParents = nParents, nCrosses = nCrosses, nProgeny = nProgeny,
+                useOptContrib = FALSE,
+                useCurrentPhenoTrain = TRUE,
+                nCyclesToKeepRecords = 10,
+                selCritPipeAdv = selCritIID,
+                selCritPopImprov = selCritGRM,
+                nChr = 3,effPopSize = 200, nFounders = 200, 
+                segSites = 200, nQTL = 30, nSNP = 50, 
+                genVar = 50, gxeVar = 0, meanDD = 0.1, varDD = 0.25)
+
+starttime<-proc.time()[3]
+require(furrr); options(mc.cores=4); plan(multiprocess)
+gssims<-future_map(1:4,~runBreedingScheme(replication = .,nCycles = 10,
+                                   initializeFunc = initFuncADChk,
+                                   productPipeline = prodPipeFncChk,
+                                   populationImprovement = popImprov1Cyc,
+                                   bsp = bsp))
+runtime_gs<-proc.time()[3]-starttime; runtime_gs/60
+# elapsed 
+#  3.5968
+saveRDS(gssims,here::here("output","gssim_compare2ucsims.rds"))
+```
+
+# Results
+```{r}
+rm(list=ls())
+library(tidyverse); library(magrittr); library(AlphaSimR); library(AlphaSimHlpR); library(predCrossVar)
+gssims<-readRDS("~/Google Drive/PredictOutbredCrossVar/output/gssim_compare2ucsims.rds")
+ucsims<-readRDS("~/Google Drive/PredictOutbredCrossVar/output/ucsim_compare2gssims.rds")
+```
+
+```{r}
+gssims %>% 
+  tidysims(.) %>% 
+  dplyr::select(SimRep,stageOutputs) %>% 
+  unnest(stageOutputs) %>% 
+  dplyr::mutate(selCrit="ParentGEBV") %>% 
+  bind_rows(ucsims %>% 
+              tidysims(.) %>% 
+              dplyr::select(SimRep,stageOutputs) %>% 
+              unnest(stageOutputs) %>% 
+              dplyr::mutate(selCrit="CrossUC")) %>% 
+#  dplyr::filter(stage=="F1") %>% 
+  group_by(selCrit,stage,year) %>% 
+  summarize(meanGV=mean(genValMean),
+            seGV=sd(genValMean)/sqrt(n())) %>% 
+  ungroup() %>% 
+  dplyr::mutate(stage=factor(stage,levels=c("F1","CET","PYT","AYT"))) %>% 
+  ggplot(.,aes(x=year,y=meanGV,color=stage,linetype=selCrit)) + 
+  geom_point(position=position_dodge(width=0.2)) + theme_bw() +
+  geom_linerange(aes(ymin=meanGV-seGV,
+                     ymax=meanGV+seGV),position=position_dodge(width=0.2)) + 
+  geom_line()
+```
+
